@@ -172,6 +172,8 @@ public class MainActivity extends AppCompatActivity {
         addButton.setText("Add Ingredient");
     }
 
+
+
     private void refreshPantryList() {
         Cursor newCursor = databaseHelper.getAllIngredients();
 
@@ -180,17 +182,36 @@ public class MainActivity extends AppCompatActivity {
                     this,
                     android.R.layout.simple_list_item_2,
                     newCursor,
-                    new String[]{"name", "unit"},
+                    new String[]{"name", "quantity"},
                     new int[]{android.R.id.text1, android.R.id.text2},
-                    0);
+                    0
+            );
+
+            adapter.setViewBinder((view, cursor, columnIndex) -> {
+                if (view.getId() == android.R.id.text2) {
+                    String quantity = cursor.getString(
+                            cursor.getColumnIndexOrThrow("quantity"));
+                    String unit = cursor.getString(
+                            cursor.getColumnIndexOrThrow("unit"));
+
+                    ((android.widget.TextView) view).setText(
+                            quantity + " " + unit);
+                    return true;
+                }
+                return false;
+            });
+
             pantryList.setAdapter(adapter);
         } else {
             Cursor oldCursor = adapter.swapCursor(newCursor);
+
             if (oldCursor != null) {
                 oldCursor.close();
             }
         }
     }
+
+
 
     @Override
     protected void onDestroy() {
