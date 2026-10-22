@@ -59,13 +59,38 @@ public class RecipeSuggestionsActivity extends AppCompatActivity {
 
         setContentView(layout);
 
+
         recipeList.setOnItemClickListener((parent, view, position, id) -> {
             Recipe selected = matchingRecipes.get(position);
 
-            Toast.makeText(this,
-                    selected.getName() + ": " + selected.getInstructions(),
-                    Toast.LENGTH_LONG).show();
+            StringBuilder ingredientsText = new StringBuilder();
+
+            for (Recipe.Ingredient ingredient : selected.getIngredients()) {
+                ingredientsText.append("• ")
+                        .append(ingredient.getName())
+                        .append(" — ")
+                        .append(ingredient.getQuantity())
+                        .append(" ")
+                        .append(ingredient.getUnit())
+                        .append("\n");
+            }
+
+            android.content.Intent intent = new android.content.Intent(
+                    RecipeSuggestionsActivity.this,
+                    RecipeDetailActivity.class);
+
+            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_NAME,
+                    selected.getName());
+            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_DESCRIPTION,
+                    selected.getDescription());
+            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_INGREDIENTS,
+                    ingredientsText.toString());
+            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_INSTRUCTIONS,
+                    selected.getInstructions());
+
+            startActivity(intent);
         });
+
 
         recipeList.setTag("recipeList");
     }
