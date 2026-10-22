@@ -44,6 +44,12 @@
         android:layout_height="wrap_content"
         android:text="Add Ingredient" />
 
+    <Button
+        android:id="@+id/findRecipesButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Find Recipes" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

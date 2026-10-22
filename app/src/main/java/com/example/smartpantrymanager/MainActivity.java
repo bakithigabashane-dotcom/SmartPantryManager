@@ -41,6 +41,13 @@ public class MainActivity extends AppCompatActivity {
         refreshPantryList();
 
         addButton.setOnClickListener(v -> saveIngredient());
+        Button findRecipesButton = findViewById(R.id.findRecipesButton);
+
+        findRecipesButton.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(
+                    MainActivity.this, RecipeSuggestionsActivity.class);
+            startActivity(intent);
+        });
 
         pantryList.setOnItemClickListener((parent, view, position, id) -> {
             Cursor cursor = (Cursor) adapter.getItem(position);
