@@ -49,6 +49,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        Button settingsButton = findViewById(R.id.settingsButton);
+        settingsButton.setOnClickListener(v -> {
+            android.content.Intent intent = new android.content.Intent(
+                    MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
+
         pantryList.setOnItemClickListener((parent, view, position, id) -> {
             Cursor cursor = (Cursor) adapter.getItem(position);
             if (cursor != null) {
