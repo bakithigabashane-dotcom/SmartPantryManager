@@ -2,69 +2,121 @@
 package com.example.smartpantrymanager;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.os.Bundle;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.ScrollView;
 
 public class SettingsActivity extends Activity {
+
+    private static final int CREAM = Color.rgb(247, 245, 239);
+    private static final int GREEN = Color.rgb(49, 91, 69);
+    private static final int MUTED = Color.rgb(101, 117, 104);
+    private static final int WHITE = Color.WHITE;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+        scrollView.setBackgroundColor(CREAM);
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 32);
-        layout.setBackgroundColor(Color.WHITE);
+        layout.setPadding(24, 28, 24, 28);
+        layout.setBackgroundColor(CREAM);
 
         TextView title = new TextView(this);
         title.setText("Settings");
-        title.setTextSize(28);
-        title.setTextColor(Color.rgb(40, 90, 70));
-        title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 16, 0, 24);
+        title.setTextSize(29);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        title.setTextColor(GREEN);
+        title.setPadding(0, 0, 0, 8);
         layout.addView(title);
 
-        TextView appName = new TextView(this);
-        appName.setText("Smart Pantry Manager");
-        appName.setTextSize(20);
-        appName.setTextColor(Color.BLACK);
-        appName.setPadding(0, 12, 0, 8);
-        layout.addView(appName);
+        TextView subtitle = new TextView(this);
+        subtitle.setText("About pantry app");
+        subtitle.setTextSize(16);
+        subtitle.setTextColor(MUTED);
+        subtitle.setPadding(0, 0, 0, 22);
+        layout.addView(subtitle);
 
-        TextView description = new TextView(this);
-        description.setText(
-                "Keep track of your ingredients and discover recipes " +
-                        "you can make with what you have."
-        );
-        description.setTextSize(16);
-        description.setTextColor(Color.DKGRAY);
-        description.setPadding(0, 0, 0, 24);
-        layout.addView(description);
+        layout.addView(createCard(
+                "Smart Pantry Manager",
+                "Keep track of your ingredients, manage expiry dates, " +
+                        "and discover recipes you can make with the food you have."
+        ));
 
-        TextView storage = new TextView(this);
-        storage.setText("Data Storage\nYour pantry is saved locally on this device using SQLite.");
-        storage.setTextSize(16);
-        storage.setTextColor(Color.BLACK);
-        storage.setPadding(0, 12, 0, 24);
-        layout.addView(storage);
+        layout.addView(createCard(
+                "Data Storage",
+                "Your pantry ingredients are stored locally on this device " +
+                        "using an SQLite database."
+        ));
 
-        TextView matching = new TextView(this);
-        matching.setText("Recipe Matching\nRecipes are shown only when you have every required ingredient in sufficient quantity.");
-        matching.setTextSize(16);
-        matching.setTextColor(Color.BLACK);
-        matching.setPadding(0, 12, 0, 24);
-        layout.addView(matching);
+        layout.addView(createCard(
+                "Recipe Matching",
+                "Recipes are suggested only when every required ingredient " +
+                        "is available in sufficient quantity. Automatic unit conversion " +
+                        "is not supported."
+        ));
+
+        layout.addView(createCard(
+                "Expiry Dates",
+                "Save an expiry date for each ingredient. Expired ingredients " +
+                        "are highlighted in red, and ingredients expiring within three " +
+                        "days are highlighted in amber."
+        ));
 
         TextView version = new TextView(this);
-        version.setText("Version 1.0\nStudent project");
-        version.setTextSize(14);
-        version.setTextColor(Color.GRAY);
-        version.setPadding(0, 24, 0, 0);
+        version.setText("Version 1.0\nMobile App Development 700");
+        version.setTextSize(13);
+        version.setTextColor(MUTED);
+        version.setGravity(Gravity.CENTER);
+        version.setPadding(0, 16, 0, 0);
         layout.addView(version);
 
-        setContentView(layout);
+        scrollView.addView(layout);
+        setContentView(scrollView);
+    }
+
+    private LinearLayout createCard(String headingText, String bodyText) {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(18, 16, 18, 18);
+
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(WHITE);
+        background.setCornerRadius(20);
+        background.setStroke(1, Color.rgb(225, 232, 223));
+        card.setBackground(background);
+
+        TextView heading = new TextView(this);
+        heading.setText(headingText);
+        heading.setTextSize(18);
+        heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        heading.setTextColor(GREEN);
+        heading.setPadding(0, 0, 0, 8);
+        card.addView(heading);
+
+        TextView body = new TextView(this);
+        body.setText(bodyText);
+        body.setTextSize(15);
+        body.setTextColor(Color.rgb(55, 65, 57));
+        body.setLineSpacing(4, 1.0f);
+        card.addView(body);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.bottomMargin = 14;
+        card.setLayoutParams(params);
+
+        return card;
     }
 }

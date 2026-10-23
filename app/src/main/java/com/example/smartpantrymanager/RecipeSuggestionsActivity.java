@@ -2,14 +2,17 @@
 package com.example.smartpantrymanager;
 
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -18,8 +21,16 @@ import java.util.List;
 
 public class RecipeSuggestionsActivity extends AppCompatActivity {
 
+    private static final int CREAM = Color.rgb(247, 245, 239);
+    private static final int GREEN = Color.rgb(49, 91, 69);
+    private static final int MUTED = Color.rgb(101, 117, 104);
+    private static final int WHITE = Color.WHITE;
+
     private DatabaseHelper databaseHelper;
     private final List<Recipe> matchingRecipes = new ArrayList<>();
+    private ListView recipeList;
+    private LinearLayout layout;
+    private TextView emptyMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,34 +42,52 @@ public class RecipeSuggestionsActivity extends AppCompatActivity {
     }
 
     private void createScreen() {
-        LinearLayout layout = new LinearLayout(this);
+        layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(32, 32, 32, 16);
+        layout.setPadding(24, 28, 24, 16);
+        layout.setBackgroundColor(CREAM);
 
         TextView heading = new TextView(this);
         heading.setText("Recipes You Can Make");
-        heading.setTextSize(25);
-        heading.setGravity(Gravity.CENTER_VERTICAL);
-        heading.setPadding(0, 0, 0, 16);
+        heading.setTextSize(27);
+        heading.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        heading.setTextColor(GREEN);
+        heading.setPadding(0, 0, 0, 8);
         layout.addView(heading);
 
         TextView explanation = new TextView(this);
         explanation.setText(
-                "Suggestions use your pantry. Every required ingredient " +
-                        "must be available in a sufficient quantity.");
+                "Make something delicious with your pantry ingredients. " +
+                        "Every required ingredient must be available in sufficient quantity."
+        );
         explanation.setTextSize(15);
+        explanation.setTextColor(MUTED);
         explanation.setPadding(0, 0, 0, 20);
         layout.addView(explanation);
 
-        ListView recipeList = new ListView(this);
-        recipeList.setId(android.view.View.generateViewId());
+        emptyMessage = new TextView(this);
+        emptyMessage.setText(
+                "No complete recipe matches yet.\n\n" +
+                        "Add more ingredients or check the quantities in your pantry."
+        );
+        emptyMessage.setTextSize(17);
+        emptyMessage.setTextColor(GREEN);
+        emptyMessage.setGravity(Gravity.CENTER);
+        emptyMessage.setPadding(20, 32, 20, 32);
+        emptyMessage.setVisibility(View.GONE);
+        layout.addView(emptyMessage);
+
+        recipeList = new ListView(this);
+        recipeList.setDivider(null);
+        recipeList.setDividerHeight(0);
+        recipeList.setBackgroundColor(CREAM);
+        recipeList.setClipToPadding(false);
 
         layout.addView(recipeList, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                0, 1));
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1
+        ));
 
         setContentView(layout);
-
 
         recipeList.setOnItemClickListener((parent, view, position, id) -> {
             Recipe selected = matchingRecipes.get(position);
@@ -77,22 +106,28 @@ public class RecipeSuggestionsActivity extends AppCompatActivity {
 
             android.content.Intent intent = new android.content.Intent(
                     RecipeSuggestionsActivity.this,
-                    RecipeDetailActivity.class);
+                    RecipeDetailActivity.class
+            );
 
-            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_NAME,
-                    selected.getName());
-            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_DESCRIPTION,
-                    selected.getDescription());
-            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_INGREDIENTS,
-                    ingredientsText.toString());
-            intent.putExtra(RecipeDetailActivity.EXTRA_RECIPE_INSTRUCTIONS,
-                    selected.getInstructions());
+            intent.putExtra(
+                    RecipeDetailActivity.EXTRA_RECIPE_NAME,
+                    selected.getName()
+            );
+            intent.putExtra(
+                    RecipeDetailActivity.EXTRA_RECIPE_DESCRIPTION,
+                    selected.getDescription()
+            );
+            intent.putExtra(
+                    RecipeDetailActivity.EXTRA_RECIPE_INGREDIENTS,
+                    ingredientsText.toString()
+            );
+            intent.putExtra(
+                    RecipeDetailActivity.EXTRA_RECIPE_INSTRUCTIONS,
+                    selected.getInstructions()
+            );
 
             startActivity(intent);
         });
-
-
-        recipeList.setTag("recipeList");
     }
 
     private void loadMatchingRecipes() {
@@ -114,13 +149,20 @@ public class RecipeSuggestionsActivity extends AppCompatActivity {
 
         RecipeMatcher matcher = new RecipeMatcher();
 
+        matchingRecipes.clear();
+
         for (Recipe recipe : RecipeData.getRecipes()) {
             if (matcher.canMakeRecipe(recipe, pantryItems)) {
                 matchingRecipes.add(recipe);
             }
         }
 
-        ListView recipeList = findListView();
+        if (matchingRecipes.isEmpty()) {
+            recipeList.setVisibility(View.GONE);
+            emptyMessage.setVisibility(View.VISIBLE);
+            return;
+        }
+
         List<String> displayNames = new ArrayList<>();
 
         for (Recipe recipe : matchingRecipes) {
@@ -128,32 +170,45 @@ public class RecipeSuggestionsActivity extends AppCompatActivity {
                     recipe.getName() + "\n" + recipe.getDescription());
         }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1,
-                displayNames);
+                displayNames
+        ) {
+            @Override
+            public View getView(int position, View convertView,
+                                ViewGroup parent) {
+                TextView card = (TextView) super.getView(
+                        position, convertView, parent);
+
+                card.setTextColor(GREEN);
+                card.setTextSize(16);
+                card.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                card.setGravity(Gravity.CENTER_VERTICAL);
+                card.setPadding(20, 20, 20, 20);
+
+                GradientDrawable background = new GradientDrawable();
+                background.setColor(WHITE);
+                background.setCornerRadius(20);
+                background.setStroke(1, Color.rgb(225, 232, 223));
+                card.setBackground(background);
+
+                ViewGroup.MarginLayoutParams params =
+                        new ViewGroup.MarginLayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        );
+
+                params.setMargins(0, 0, 0, 12);
+                card.setLayoutParams(params);
+
+                return card;
+            }
+        };
 
         recipeList.setAdapter(adapter);
-
-        if (matchingRecipes.isEmpty()) {
-            Toast.makeText(this,
-                    "No complete recipe matches yet. Add more ingredients!",
-                    Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private ListView findListView() {
-        LinearLayout layout = (LinearLayout)
-                ((android.view.ViewGroup) findViewById(
-                        android.R.id.content)).getChildAt(0);
-
-        for (int i = 0; i < layout.getChildCount(); i++) {
-            if (layout.getChildAt(i) instanceof ListView) {
-                return (ListView) layout.getChildAt(i);
-            }
-        }
-
-        throw new IllegalStateException("Recipe list was not created");
+        recipeList.setVisibility(View.VISIBLE);
+        emptyMessage.setVisibility(View.GONE);
     }
 
     @Override
