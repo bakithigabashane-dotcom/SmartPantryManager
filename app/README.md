@@ -43,8 +43,8 @@ The pantry table contains the following fields:
 
 This application has 20 sample recipes with which the recipe matcher compares with the ingredients stored in the pantry.
 
-A recipe is suggested only when all required ingredients are available in sufficient quantities. 
-Simple singular and plural differences in ingredient names are normalized. 
+A recipe is suggested only when all required ingredients are available in sufficient quantities.
+Simple singular and plural differences in ingredient names are normalized.
 Ingredient units must match after normalization, automatic unit conversion is not supported.
 
 ## Main Source Files
@@ -63,7 +63,7 @@ Ingredient units must match after normalization, automatic unit conversion is no
 ## How to Run
 
 1. Install Android Studio.
-2. Clone or download this repository.
+2. Clone or download this repository. 
 3. Open the project in Android Studio.
 4. Allow Gradle sync to finish.
 5. Run the app on a compatible Android emulator or Android device.
