@@ -15,6 +15,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import android.app.DatePickerDialog;
+import java.util.Calendar;
+import java.util.Locale;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private ListView pantryList;
     private int editingId = -1;
     private Button addButton;
+    private TextView expiryDateInput;
+    private String selectedExpiryDate = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        expiryDateInput = findViewById(R.id.expiryDateInput);
+
+        expiryDateInput.setOnClickListener(v -> showExpiryDatePicker());
+
         Button settingsButton = findViewById(R.id.settingsButton);
         settingsButton.setOnClickListener(v -> {
             android.content.Intent intent = new android.content.Intent(
@@ -73,6 +84,19 @@ public class MainActivity extends AppCompatActivity {
                 quantityInput.setText(String.valueOf(quantity));
                 unitInput.setText(unit);
                 addButton.setText("Update Ingredient");
+
+                int expiryIndex = cursor.getColumnIndex("expiry_date");
+
+                selectedExpiryDate = expiryIndex >= 0
+                        ? cursor.getString(expiryIndex)
+                        : null;
+
+                if (selectedExpiryDate == null || selectedExpiryDate.isEmpty()) {
+                    selectedExpiryDate = "";
+                    expiryDateInput.setText("Expiry date: Not set");
+                } else {
+                    expiryDateInput.setText("Expiry date: " + selectedExpiryDate);
+                }
             }
         });
 
@@ -93,6 +117,9 @@ public class MainActivity extends AppCompatActivity {
         String name = nameInput.getText().toString().trim();
         String quantityText = quantityInput.getText().toString().trim();
         String unit = unitInput.getText().toString().trim();
+
+        String expiryDate = selectedExpiryDate.isEmpty()
+                ? null : selectedExpiryDate;
 
         if (name.isEmpty() || quantityText.isEmpty() || unit.isEmpty()) {
             Toast.makeText(this, "Please complete all fields",
@@ -117,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (editingId == -1) {
             long result = databaseHelper.insertIngredient(
-                    name, quantity, unit);
+                    name, quantity, unit, expiryDate);
             if (result != -1) {
                 Toast.makeText(this, "Ingredient added",
                         Toast.LENGTH_SHORT).show();
@@ -129,7 +156,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             int result = databaseHelper.updateIngredient(
-                    editingId, name, quantity, unit);
+                    editingId, name, quantity, unit, expiryDate);
             if (result > 0) {
                 Toast.makeText(this, "Ingredient updated",
                         Toast.LENGTH_SHORT).show();
@@ -141,6 +168,59 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+    private void showExpiryDatePicker() {
+        Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    selectedExpiryDate = String.format(
+                            Locale.ROOT, "%04d-%02d-%02d",
+                            year, month + 1, dayOfMonth);
+
+                    expiryDateInput.setText(
+                            "Expiry date: " + selectedExpiryDate);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        dialog.setButton(
+                DatePickerDialog.BUTTON_NEUTRAL,
+                "Clear date",
+                (dateDialog, which) -> {
+                    selectedExpiryDate = "";
+                    expiryDateInput.setText("Expiry date: Not set");
+                }
+        );
+
+        dialog.show();
+    }
+
+    private String getExpiryStatus(String expiryDate) {
+        if (expiryDate == null || expiryDate.trim().isEmpty()) {
+            return "Expiry date: Not set";
+        }
+
+        try {
+            LocalDate expiry = LocalDate.parse(expiryDate);
+            LocalDate today = LocalDate.now();
+            long daysRemaining = ChronoUnit.DAYS.between(today, expiry);
+
+            if (daysRemaining < 0) {
+                return "EXPIRED";
+            } else if (daysRemaining <= 3) {
+                return "EXPIRING SOON";
+            } else {
+                return "Fresh";
+            }
+        } catch (java.time.format.DateTimeParseException e) {
+            return "Expiry date: " + expiryDate;
+        }
+    }
+
+
 
     private void confirmDelete(int ingredientId, String name) {
         new AlertDialog.Builder(this)
@@ -170,7 +250,10 @@ public class MainActivity extends AppCompatActivity {
         unitInput.setText("");
         editingId = -1;
         addButton.setText("Add Ingredient");
+        selectedExpiryDate = "";
+        expiryDateInput.setText("Expiry date: Not set");
     }
+
 
 
 
@@ -193,10 +276,36 @@ public class MainActivity extends AppCompatActivity {
                             cursor.getColumnIndexOrThrow("quantity"));
                     String unit = cursor.getString(
                             cursor.getColumnIndexOrThrow("unit"));
+                    String expiryDate = cursor.getString(
+                            cursor.getColumnIndexOrThrow("expiry_date"));
 
-                    ((android.widget.TextView) view).setText(
-                            quantity + " " + unit);
+
+                    String status = getExpiryStatus(expiryDate);
+
+                    String details = quantity + " " + unit;
+
+                    if (expiryDate != null && !expiryDate.isEmpty()) {
+                        details += "\nExpires: " + expiryDate;
+                        details += "\nStatus: " + status;
+                    } else {
+                        details += "\n" + status;
+                    }
+
+                    android.widget.TextView textView =
+                            (android.widget.TextView) view;
+
+                    textView.setText(details);
+
+                    if ("EXPIRED".equals(status)) {
+                        textView.setTextColor(android.graphics.Color.rgb(179, 38, 30));
+                    } else if ("EXPIRING SOON".equals(status)) {
+                        textView.setTextColor(android.graphics.Color.rgb(138, 75, 8));
+                    } else {
+                        textView.setTextColor(android.graphics.Color.DKGRAY);
+                    }
+
                     return true;
+
                 }
                 return false;
             });
@@ -210,6 +319,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 
 

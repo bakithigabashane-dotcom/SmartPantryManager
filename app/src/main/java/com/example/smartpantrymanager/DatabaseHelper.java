@@ -36,14 +36,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         // Database upgrade logic can be added when the schema changes.
     }
 
+
     public long insertIngredient(String name, double quantity,
-                                 String unit) {
+                                 String unit, String expiryDate) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put("name", name);
         values.put("quantity", quantity);
         values.put("unit", unit);
+        values.put("expiry_date", expiryDate);
 
         return db.insert(TABLE_PANTRY, null, values);
     }
@@ -60,14 +62,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
+
     public int updateIngredient(int id, String name,
-                                double quantity, String unit) {
+                                double quantity, String unit,
+                                String expiryDate) {
         SQLiteDatabase db = getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put("name", name);
         values.put("quantity", quantity);
         values.put("unit", unit);
+        values.put("expiry_date", expiryDate);
 
         return db.update(TABLE_PANTRY, values,
                 "_id = ?", new String[]{String.valueOf(id)});
